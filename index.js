@@ -25,6 +25,7 @@ const corsOptions = {
     origin: [
         "http://localhost:5173", 
         "https://flight606-client-fz2b8melc-arjay-c-s-projects.vercel.app",
+        "https://flight606-client-8lt5r5jnk-arjay-c-s-projects.vercel.app",
         "https://flight606-server-1.onrender.com"
     ],
     credentials: true,
