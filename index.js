@@ -24,7 +24,7 @@ const corsOptions = {
     // REMOVED THE TRAILING SLASH "/" AT THE END OF THE VERCEL DOMAIN TEXT STRING!
     origin: [
         "http://localhost:5173", 
-        "https://flight606-client-idmitxba6-arjay-c-s-projects.vercel.app", 
+        "https://flight606-client-fz2b8melc-arjay-c-s-projects.vercel.app",
         "https://flight606-server-1.onrender.com"
     ],
     credentials: true,
