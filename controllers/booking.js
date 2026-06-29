@@ -220,30 +220,30 @@ module.exports.secureGuestLookup = (req, res) => {
         return res.status(400).send({ message: "Both Email and Booking Reference are required." });
     }
 
-    return Booking.findOne({ 
-        guestEmail, 
-        bookingReference, 
-        userId: null, 
-        isActive: true 
+    return Booking.findOne({
+        guestEmail,
+        bookingReference,
+        userId: null,
+        isActive: true
     })
-    .populate({
-        path: "flightId",
-        populate: [
-            { path: "originAirportId" },
-            { path: "destinationAirportId" },
-            { path: "airlineId" }
-        ]
-    })
-    .then(booking => {
-        if (!booking) {
-            return res.status(404).send({ message: "No matching record found. Please check your details." });
-        }
-        return res.status(200).send({
-            message: "Booking retrieved securely",
-            booking
-        });
-    })
-    .catch(err => errorHandler(err, req, res));
+        .populate({
+            path: "flightId",
+            populate: [
+                { path: "originAirportId" },
+                { path: "destinationAirportId" },
+                { path: "airlineId" }
+            ]
+        })
+        .then(booking => {
+            if (!booking) {
+                return res.status(404).send({ message: "No matching record found. Please check your details." });
+            }
+            return res.status(200).send({
+                message: "Booking retrieved securely",
+                booking
+            });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 
@@ -252,16 +252,16 @@ module.exports.getBookingByReference = (req, res) => {
         bookingReference: req.params.bookingReference,
         isActive: true
     })
-    .then(result => {
-        if (!result) {
-            return res.status(404).send({ message: "No booking found" });
-        }
-        return res.status(200).send({
-            message: "Booking found",
-            result
-        });
-    })
-    .catch(err => errorHandler(err, req, res));
+        .then(result => {
+            if (!result) {
+                return res.status(404).send({ message: "No booking found" });
+            }
+            return res.status(200).send({
+                message: "Booking found",
+                result
+            });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 
@@ -278,30 +278,30 @@ module.exports.cancelBookingUser = (req, res) => {
         },
         { new: true }
     )
-    .then(result => {
-        if (!result) {
-            return res.status(404).send({ message: "Booking not found" });
-        }
+        .then(result => {
+            if (!result) {
+                return res.status(404).send({ message: "Booking not found" });
+            }
 
-        // Free all seats claimed under this booking
-        return BookingPassenger.find({ bookingId: result._id, isActive: true })
-            .then(bkps => {
-                const seatIds = bkps.map(b => b.seatId);
-                return BookingPassenger.updateMany(
-                    { bookingId: result._id },
-                    { isActive: false }
-                )
-                .then(() => Seat.updateMany(
-                    { _id: { $in: seatIds } },
-                    { isOccupied: false }
-                ))
-                .then(() => res.status(200).send({
-                    message: "Booking cancelled successfully",
-                    result
-                }));
-            });
-    })
-    .catch(err => errorHandler(err, req, res));
+            // Free all seats claimed under this booking
+            return BookingPassenger.find({ bookingId: result._id, isActive: true })
+                .then(bkps => {
+                    const seatIds = bkps.map(b => b.seatId);
+                    return BookingPassenger.updateMany(
+                        { bookingId: result._id },
+                        { isActive: false }
+                    )
+                        .then(() => Seat.updateMany(
+                            { _id: { $in: seatIds } },
+                            { isOccupied: false }
+                        ))
+                        .then(() => res.status(200).send({
+                            message: "Booking cancelled successfully",
+                            result
+                        }));
+                });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 
@@ -325,30 +325,30 @@ module.exports.cancelBookingGuest = (req, res) => {
         },
         { new: true }
     )
-    .then(result => {
-        if (!result) {
-            return res.status(404).send({ message: "Booking not found" });
-        }
+        .then(result => {
+            if (!result) {
+                return res.status(404).send({ message: "Booking not found" });
+            }
 
-        // Free all seats claimed under this booking
-        return BookingPassenger.find({ bookingId: result._id, isActive: true })
-            .then(bkps => {
-                const seatIds = bkps.map(b => b.seatId);
-                return BookingPassenger.updateMany(
-                    { bookingId: result._id },
-                    { isActive: false }
-                )
-                .then(() => Seat.updateMany(
-                    { _id: { $in: seatIds } },
-                    { isOccupied: false }
-                ))
-                .then(() => res.status(200).send({
-                    message: "Booking cancelled successfully",
-                    result
-                }));
-            });
-    })
-    .catch(err => errorHandler(err, req, res));
+            // Free all seats claimed under this booking
+            return BookingPassenger.find({ bookingId: result._id, isActive: true })
+                .then(bkps => {
+                    const seatIds = bkps.map(b => b.seatId);
+                    return BookingPassenger.updateMany(
+                        { bookingId: result._id },
+                        { isActive: false }
+                    )
+                        .then(() => Seat.updateMany(
+                            { _id: { $in: seatIds } },
+                            { isOccupied: false }
+                        ))
+                        .then(() => res.status(200).send({
+                            message: "Booking cancelled successfully",
+                            result
+                        }));
+                });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 
@@ -390,15 +390,15 @@ module.exports.updateBooking = (req, res) => {
                     { flightId, totalAmount },
                     { new: true }
                 )
-                .then(result => {
-                    if (!result) {
-                        return res.status(404).send({ message: "Booking not found" });
-                    }
-                    return res.status(200).send({
-                        message: "Booking updated successfully",
-                        result
+                    .then(result => {
+                        if (!result) {
+                            return res.status(404).send({ message: "Booking not found" });
+                        }
+                        return res.status(200).send({
+                            message: "Booking updated successfully",
+                            result
+                        });
                     });
-                });
             })
             .catch(err => errorHandler(err, req, res));
     }
@@ -408,16 +408,16 @@ module.exports.updateBooking = (req, res) => {
         { totalAmount },
         { new: true }
     )
-    .then(result => {
-        if (!result) {
-            return res.status(404).send({ message: "Booking not found" });
-        }
-        return res.status(200).send({
-            message: "Booking updated successfully",
-            result
-        });
-    })
-    .catch(err => errorHandler(err, req, res));
+        .then(result => {
+            if (!result) {
+                return res.status(404).send({ message: "Booking not found" });
+            }
+            return res.status(200).send({
+                message: "Booking updated successfully",
+                result
+            });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 module.exports.updateBookingStatus = (req, res) => {
@@ -433,29 +433,29 @@ module.exports.updateBookingStatus = (req, res) => {
         { status },
         { new: true }
     )
-   
-    .then(result => {
-        if (!result) {
-            return res.status(404).send({ message: "Booking not found" });
-        }
 
-        if (status === "confirmed") {
-            createNotification({
-                userId: result.userId,
-                guestEmail: result.guestEmail,
-                type: "booking_confirmed",
-                message: `Your booking ${result.bookingReference} has been confirmed.`,
-                referenceId: result._id,
-                referenceModel: "Booking"
-            }).catch(err => console.error("Notification save failed:", err));
-        }
+        .then(result => {
+            if (!result) {
+                return res.status(404).send({ message: "Booking not found" });
+            }
 
-        return res.status(200).send({
-            message: "Booking status updated successfully",
-            result
-        });
-    })
-    .catch(err => errorHandler(err, req, res));
+            if (status === "confirmed") {
+                createNotification({
+                    userId: result.userId,
+                    guestEmail: result.guestEmail,
+                    type: "booking_confirmed",
+                    message: `Your booking ${result.bookingReference} has been confirmed.`,
+                    referenceId: result._id,
+                    referenceModel: "Booking"
+                }).catch(err => console.error("Notification save failed:", err));
+            }
+
+            return res.status(200).send({
+                message: "Booking status updated successfully",
+                result
+            });
+        })
+        .catch(err => errorHandler(err, req, res));
 };
 
 module.exports.deactivateBooking = (req, res) => {
@@ -473,10 +473,10 @@ module.exports.deactivateBooking = (req, res) => {
                 { isActive: false },
                 { new: true }
             )
-            .then(result => res.status(200).send({
-                message: "Booking deactivated successfully",
-                result
-            }));
+                .then(result => res.status(200).send({
+                    message: "Booking deactivated successfully",
+                    result
+                }));
         })
         .catch(err => errorHandler(err, req, res));
 };
@@ -496,10 +496,10 @@ module.exports.reactivateBooking = (req, res) => {
                 { isActive: true },
                 { new: true }
             )
-            .then(result => res.status(200).send({
-                message: "Booking reactivated successfully",
-                result
-            }));
+                .then(result => res.status(200).send({
+                    message: "Booking reactivated successfully",
+                    result
+                }));
         })
         .catch(err => errorHandler(err, req, res));
 };
@@ -515,10 +515,10 @@ module.exports.rescheduleBookingUser = async (req, res) => {
 
     try {
         // 1. Find existing active booking belonging to the user
-        const booking = await Booking.findOne({ 
-            bookingReference, 
-            userId: req.user.id, 
-            isActive: true 
+        const booking = await Booking.findOne({
+            bookingReference,
+            userId: req.user.id,
+            isActive: true
         });
 
         if (!booking) {
@@ -549,9 +549,9 @@ module.exports.rescheduleBookingUser = async (req, res) => {
         // 4. Find the passenger record tied to this booking to get the old seat ID
         // Note: If your system allows multiple passengers per booking, this logic 
         // will need to iterate over an array of passenger/seat updates.
-        const bookingPassenger = await BookingPassenger.findOne({ 
-            bookingId: booking._id, 
-            isActive: true 
+        const bookingPassenger = await BookingPassenger.findOne({
+            bookingId: booking._id,
+            isActive: true
         });
 
         if (!bookingPassenger) {
@@ -561,14 +561,14 @@ module.exports.rescheduleBookingUser = async (req, res) => {
         const oldSeatId = bookingPassenger.seatId;
 
         // 5. Calculate new fare
-        const newTotalAmount = newSeat.class === "business" 
-            ? newFlight.businessPrice 
+        const newTotalAmount = newSeat.class === "business"
+            ? newFlight.businessPrice
             : newFlight.basePrice;
 
         // 6. Execute the Swap
         // Free the old seat
         await Seat.findByIdAndUpdate(oldSeatId, { isOccupied: false });
-        
+
         // Occupy the new seat
         await Seat.findByIdAndUpdate(newSeatId, { isOccupied: true });
 
@@ -579,7 +579,7 @@ module.exports.rescheduleBookingUser = async (req, res) => {
         // Update the main booking details
         booking.flightId = newFlightId;
         booking.totalAmount = newTotalAmount;
-        
+
         // Optional logic: If they already paid but the new flight is more expensive, 
         // you might want to revert the status to "pending" to require a top-up payment.
         // if (booking.status === "confirmed" && newTotalAmount > booking.totalAmount) {
