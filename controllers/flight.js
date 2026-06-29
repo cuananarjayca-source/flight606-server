@@ -46,10 +46,14 @@ module.exports.searchFlights = (req, res) => {
 		return res.status(400).send({ message: "Departure date required" });
 	}
 
-	const startOfDay = new Date(req.query.departureDate);
-	startOfDay.setUTCHours(0, 0, 0, 0);
-	const endOfDay = new Date(req.query.departureDate);
-	endOfDay.setUTCHours(23, 59, 59, 999);
+	// 1. Build string templates for the local day limits (e.g. "2026-06-29T00:00:00.000")
+	const localStartStr = `${req.query.departureDate}T00:00:00.000`;
+	const localEndStr = `${req.query.departureDate}T23:59:59.999`;
+
+	// 2. Explicitly attach the Manila time zone offset (+08:00) 
+	// JavaScript will automatically parse these into the correct absolute UTC times
+	const startOfDay = new Date(`${localStartStr}+08:00`);
+	const endOfDay = new Date(`${localEndStr}+08:00`);
 
 	return Flight.find({
 		originAirportId: req.query.originAirportId,
@@ -58,33 +62,34 @@ module.exports.searchFlights = (req, res) => {
 		isActive: true,
 		status: "scheduled"
 	})
-	.then(result => {
-		if (result.length === 0) {
-			return res.status(404).send({ message: "No flights found for this date" });
-		}
-		return res.status(200).send({
-			message: "Flights found",
-			flights: result
-		});
-	})
-	.catch(err => errorHandler(err, req, res));
+		.then(result => {
+			if (result.length === 0) {
+				return res.status(404).send({ message: "No flights found for this date" });
+			}
+			return res.status(200).send({
+				message: "Flights found",
+				flights: result
+			});
+		})
+		.catch(err => errorHandler(err, req, res));
 };
+
 
 module.exports.getFlightById = (req, res) => {
 	return Flight.findOne({
 		_id: req.params.id,
 		isActive: true
 	})
-	.then(result => {
-		if (!result) {
-			return res.status(404).send({ message: "No flight found" });
-		}
-		return res.status(200).send({
-			message: "Flight found",
-			result
-		});
-	})
-	.catch(err => errorHandler(err, req, res));
+		.then(result => {
+			if (!result) {
+				return res.status(404).send({ message: "No flight found" });
+			}
+			return res.status(200).send({
+				message: "Flight found",
+				result
+			});
+		})
+		.catch(err => errorHandler(err, req, res));
 };
 
 
@@ -228,18 +233,18 @@ module.exports.updateFlight = (req, res) => {
 	}
 
 	const updates = {};
-	if (airlineId !== undefined)             updates.airlineId             = airlineId;
-	if (aircraftId !== undefined)            updates.aircraftId            = aircraftId;
-	if (originAirportId !== undefined)       updates.originAirportId       = originAirportId;
-	if (destinationAirportId !== undefined)  updates.destinationAirportId  = destinationAirportId;
-	if (flightNumber !== undefined)          updates.flightNumber          = flightNumber;
-	if (departureTime !== undefined)         updates.departureTime         = departureTime;
-	if (arrivalTime !== undefined)           updates.arrivalTime           = arrivalTime;
-	if (status !== undefined)                updates.status                = status;
-	if (basePrice !== undefined)             updates.basePrice             = basePrice;
-	if (businessPrice !== undefined)         updates.businessPrice         = businessPrice;
-	if (originTerminal !== undefined)        updates.originTerminal        = originTerminal || null;
-	if (destinationTerminal !== undefined)   updates.destinationTerminal   = destinationTerminal || null;
+	if (airlineId !== undefined) updates.airlineId = airlineId;
+	if (aircraftId !== undefined) updates.aircraftId = aircraftId;
+	if (originAirportId !== undefined) updates.originAirportId = originAirportId;
+	if (destinationAirportId !== undefined) updates.destinationAirportId = destinationAirportId;
+	if (flightNumber !== undefined) updates.flightNumber = flightNumber;
+	if (departureTime !== undefined) updates.departureTime = departureTime;
+	if (arrivalTime !== undefined) updates.arrivalTime = arrivalTime;
+	if (status !== undefined) updates.status = status;
+	if (basePrice !== undefined) updates.basePrice = basePrice;
+	if (businessPrice !== undefined) updates.businessPrice = businessPrice;
+	if (originTerminal !== undefined) updates.originTerminal = originTerminal || null;
+	if (destinationTerminal !== undefined) updates.destinationTerminal = destinationTerminal || null;
 
 	if (Object.keys(updates).length === 0) {
 		return res.status(400).send({ message: "At least one field is required to update" });
@@ -250,35 +255,35 @@ module.exports.updateFlight = (req, res) => {
 		updates,
 		{ new: true }
 	)
-	.then(result => {
-		if (!result) {
-			return res.status(404).send({ message: "Flight not found" });
-		}
+		.then(result => {
+			if (!result) {
+				return res.status(404).send({ message: "Flight not found" });
+			}
 
-		if (status === "delayed" || status === "cancelled") {
-			Booking.find({ flightId: result._id, isActive: true })
-				.then(bookings => {
-					bookings.forEach(booking => {
-						createNotification({
-							userId: booking.userId,
-							guestEmail: booking.guestEmail,
-							type: "flight_status_change",
-							message: `Flight ${result.flightNumber} has been ${status}.`,
-							referenceId: result._id,
-							referenceModel: "Flight"
-						})
-						.catch(err => console.error("Notification failed:", err));
-					});
-				})
-				.catch(err => console.error("Booking lookup failed:", err));
-		}
+			if (status === "delayed" || status === "cancelled") {
+				Booking.find({ flightId: result._id, isActive: true })
+					.then(bookings => {
+						bookings.forEach(booking => {
+							createNotification({
+								userId: booking.userId,
+								guestEmail: booking.guestEmail,
+								type: "flight_status_change",
+								message: `Flight ${result.flightNumber} has been ${status}.`,
+								referenceId: result._id,
+								referenceModel: "Flight"
+							})
+								.catch(err => console.error("Notification failed:", err));
+						});
+					})
+					.catch(err => console.error("Booking lookup failed:", err));
+			}
 
-		return res.status(200).send({
-			message: "Flight updated successfully",
-			result
-		});
-	}) 
-	.catch(err => errorHandler(err, req, res)); 
+			return res.status(200).send({
+				message: "Flight updated successfully",
+				result
+			});
+		})
+		.catch(err => errorHandler(err, req, res));
 };
 
 module.exports.deactivateFlight = (req, res) => {
@@ -296,18 +301,18 @@ module.exports.deactivateFlight = (req, res) => {
 				{ isActive: false },
 				{ new: true }
 			)
-			.then(result => {
-				return Seat.updateMany(
-					{ flightId: req.params.id },
-					{ isActive: false }
-				)
-				.then(() => {
-					return res.status(200).send({
-						message: "Flight deactivated successfully",
-						result
-					});
+				.then(result => {
+					return Seat.updateMany(
+						{ flightId: req.params.id },
+						{ isActive: false }
+					)
+						.then(() => {
+							return res.status(200).send({
+								message: "Flight deactivated successfully",
+								result
+							});
+						});
 				});
-			});
 		})
 		.catch(err => errorHandler(err, req, res));
 };
@@ -327,18 +332,18 @@ module.exports.reactivateFlight = (req, res) => {
 				{ isActive: true },
 				{ new: true }
 			)
-			.then(result => {
-				return Seat.updateMany(
-					{ flightId: req.params.id, isOccupied: false },
-					{ isActive: true }
-				)
-				.then(() => {
-					return res.status(200).send({
-						message: "Flight reactivated successfully",
-						result
-					});
+				.then(result => {
+					return Seat.updateMany(
+						{ flightId: req.params.id, isOccupied: false },
+						{ isActive: true }
+					)
+						.then(() => {
+							return res.status(200).send({
+								message: "Flight reactivated successfully",
+								result
+							});
+						});
 				});
-			});
 		})
 		.catch(err => errorHandler(err, req, res));
 };
