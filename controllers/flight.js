@@ -46,14 +46,11 @@ module.exports.searchFlights = (req, res) => {
 		return res.status(400).send({ message: "Departure date required" });
 	}
 
-	// 1. Build string templates for the local day limits (e.g. "2026-06-29T00:00:00.000")
-	const localStartStr = `${req.query.departureDate}T00:00:00.000`;
-	const localEndStr = `${req.query.departureDate}T23:59:59.999`;
+	const startOfDay = new Date(req.query.departureDate);
+	startOfDay.setUTCHours(0, 0, 0, 0);
 
-	// 2. Explicitly attach the Manila time zone offset (+08:00) 
-	// JavaScript will automatically parse these into the correct absolute UTC times
-	const startOfDay = new Date(`${localStartStr}+08:00`);
-	const endOfDay = new Date(`${localEndStr}+08:00`);
+	const endOfDay = new Date(req.query.departureDate);
+	endOfDay.setUTCHours(23, 59, 59, 999);
 
 	return Flight.find({
 		originAirportId: req.query.originAirportId,
@@ -73,7 +70,6 @@ module.exports.searchFlights = (req, res) => {
 		})
 		.catch(err => errorHandler(err, req, res));
 };
-
 
 module.exports.getFlightById = (req, res) => {
 	return Flight.findOne({
