@@ -23,13 +23,13 @@ const seatRoutes = require("./routes/seat");
 const corsOptions = {
     // REMOVED THE TRAILING SLASH "/" AT THE END OF THE VERCEL DOMAIN TEXT STRING!
     origin: [
-        "http://localhost:5173", 
+        "http://localhost:5173",
         "https://flight606-client-fz2b8melc-arjay-c-s-projects.vercel.app",
         "https://flight606-client-8lt5r5jnk-arjay-c-s-projects.vercel.app",
         "https://flight606-server-1.onrender.com"
     ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     optionsSuccessStatus: 200
 };
@@ -46,7 +46,7 @@ db.once("open", () => console.log("Now connected to MongoDB Atlas."));
 
 // MIDDLEWARE
 app.use(express.json());
-app.use(express.urlencoded({ extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 // ROUTES
 app.use("/users", userRoutes);
@@ -63,8 +63,8 @@ app.use("/notifications", notificationRoutes);
 app.use("/seats", seatRoutes);
 
 // SERVER START
-if(require.main === module) {
+if (require.main === module) {
     app.listen(process.env.PORT, () => console.log(`Server running at port ${process.env.PORT}`));
 }
 
-module.exports = {app, mongoose};
+module.exports = { app, mongoose };
